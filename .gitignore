@@ -1,0 +1,15 @@
+# Python & virtual env
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local output & datasets
+out/
+*.IMG
+*.img
+*.aux.xml
+
+# Editor & OS
+.vscode/
+.DS_Store
