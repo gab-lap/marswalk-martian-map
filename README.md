@@ -4,6 +4,8 @@ NASA Space Apps Challenge 2026 · challenge: **Interplanetary Survival Guide: Ma
 
 **In one paragraph.** Two agents leave a habitat on Mars: an astronaut on foot and a rover carrying gear. They cannot go the same places, so each gets its own terrain-cost map built from real HiRISE data. The planner finds a route for each, picks three science stops, checks that everyone stays inside an abort radius, and estimates the radiation dose of the excursion. A tablet page shows all of it: map layers, a 3D terrain view, a route profile, a radiation panel with a solar-storm what-if, and a simulated rover-camera view.
 
+**Live tablet page:** [gab-lap.github.io/marswalk-martian-map](https://gab-lap.github.io/marswalk-martian-map/) · **Demo deck:** [PDF on Google Drive](https://drive.google.com/file/d/1X8OpwYs5yQFLQSyO_yOjhOQOBsApU7H3/view?usp=sharing) · **NASA Space Apps team:** Employees of the Month
+
 **Jump to:** [Results](#results-on-the-real-window) · [How it works](#how-it-works) · [What the tablet shows](#what-the-tablet-shows) · [Assumptions](#assumptions-you-should-know-about) · [Known limitations](#known-limitations) · [Run it yourself](#run-it-yourself) · [Use of AI](#use-of-ai)
 
 You do not need to install anything to see it:
