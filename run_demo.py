@@ -46,7 +46,19 @@ def snap(mask, rc):
 if zone is not None:
     hab, stop_list = stopmod.choose_stops(slope, zone, ridge, cost_a, cost_r, CELL, ASTRONAUT.max_slope_deg,
                                           P.HAB_DIST_FROM_LATTICE_M, P.STOP_MARGIN_M)
-    stops = [tuple(s["rc"]) for s in stop_list]; rover_stops = [tuple(s["rc"]) for s in stop_list if s["rover_visits"]]
+    stops = [tuple(s["rc"]) for s in stop_list]
+    # Rover goes to every stop it can reach; for the others, to the nearest ground it CAN reach ("support point") and waits there.
+    from scipy.ndimage import distance_transform_edt as _edt
+    core_r = stopmod.largest_passable(cost_r); _, (_ir, _ic) = _edt(~core_r, return_indices=True); rover_stops = []
+    for s in stop_list:
+        r0, c0 = s["rc"]
+        if core_r[r0, c0]: tgt, s["rover_visits"], s["rover_gap_m"] = (r0, c0), True, 0.0
+        else:
+            tgt = (int(_ir[r0, c0]), int(_ic[r0, c0])); s["rover_visits"] = False
+            s["rover_gap_m"] = round(float(np.hypot(tgt[0] - r0, tgt[1] - c0)) * CELL, 1)
+        s["rover_target_rc"] = list(tgt)
+        if tgt != hab and (not rover_stops or tgt != rover_stops[-1]): rover_stops.append(tgt)
+    if P.ROVER_RETURNS_TO_HAB: rover_stops.append(hab)
 else:
     core = stopmod.largest_passable(cost_r)
     hab = snap(core, (250, 60)); stops = [snap(core, p) for p in [(140, 190), (330, 280), (200, 400)]]
@@ -63,12 +75,14 @@ res = {"assumption_note": f"terrain: {source}; limits, speeds and the dose limit
 routes = {"meta": {"terrain_source": source, "window": None if not a.dtm else list(a.window), "cell_m": round(float(CELL), 4),
                    "grid_rows_cols": list(dem.shape), "mask_note": mask_note,
                    "label_legend": "sourced = NASA dataset; derived = computed from DTM/orthoimage/route; assumed = our parameter; simulated = invented for the mockup"},
+          "dwell_min_per_stop": report._lab(P.DWELL_MIN_PER_STOP, "assumed"), "camera_height_m": report._lab(P.CAMERA_HEIGHT_M, "assumed"),
           "habitat_rc": list(hab), "abort_radius_m": report._lab(ABORT_RADIUS_M, "assumed"), "stops": stop_list}
 if astro_path:
     s = planner.path_stats(astro_path, slope, CELL, WALK_SPEED_M_S)
     far = far_from_hab(astro_path); s["max_dist_from_hab_m"] = far; s["within_abort_radius"] = bool(far <= ABORT_RADIUS_M)
-    rad = report.radiation_block(s["time_min"], RAD_DOSE_RATE_MICROGY_HR, EVA_RAD_LIMIT_MICROGY, RAD_STRESS_MULTIPLIER)
+    rad = report.radiation_block(s["time_min"] + P.DWELL_MIN_PER_STOP * len(stops), RAD_DOSE_RATE_MICROGY_HR, EVA_RAD_LIMIT_MICROGY, RAD_STRESS_MULTIPLIER)
     s["radiation_dose_microGy"] = rad["scenarios"][0]["dose_uGy"]; s["radiation_go_nogo"] = rad["scenarios"][0]["verdict"]
+    s["dwell_min_per_stop"] = P.DWELL_MIN_PER_STOP; s["total_time_min"] = round(s["time_min"] + P.DWELL_MIN_PER_STOP * len(stops), 1)
     res["astronaut"] = s
     routes["astronaut"] = {"summary": s, "walk_speed_m_s": report._lab(WALK_SPEED_M_S, "assumed"),
                            "points": report.route_points(astro_path, dem, CELL, WALK_SPEED_M_S)}
@@ -85,6 +99,8 @@ else:
     print("WARNING: no rover route found")
 res["waypoints_rc"] = {"hab": list(hab), "stops": [list(p) for p in stops]}
 json.dump(res, open(f"{out}/summary.json", "w"), indent=2); print(json.dumps(res, indent=2))
+from marswalk import layers
+routes.update(layers.build(dem, slope, img, ridge, sand, zone, CELL))
 report.write_json(f"{out}/routes.json", routes)
 viz.plot_layers(dem, ridge, rocks, slope, f"{out}/1_layers.png", CELL)
 viz.plot_cost(cost_a, cost_r, f"{out}/2_costs.png")

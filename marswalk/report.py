@@ -42,7 +42,7 @@ def radiation_block(time_min, rate_uGy_h, limit_uGy, stress_mult):
     return {
         "base_rate_uGy_per_h": _lab(rate_uGy_h, "sourced: MSL RAD first-year summary (~210 uGy/day); verify against PDS data"),
         "excursion_limit_uGy": _lab(limit_uGy, "assumed: no official EVA limit used here"),
-        "excursion_time_min": _lab(round(time_min, 1), "derived: route length / walking speed"),
+        "excursion_time_min": _lab(round(time_min, 1), "derived: walking time + dwell at stops (dwell is assumed)"),
         "minutes_to_limit_nominal": _lab(round(limit_uGy / rate_uGy_h * 60, 0), "derived from the two lines above"),
         "multiplier_to_exceed_limit": _lab(round(limit_uGy / nominal, 1) if nominal else None, "derived"),
         "scenarios": [row("nominal", 1.0, "sourced rate"),

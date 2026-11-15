@@ -23,3 +23,9 @@ Synthetic terrain, per-agent costs, A* with no corner-cutting, Nav2 map export, 
 - Masks re-tuned on a screenshot of the real 3300/10450 overlay (v3 flagged bluff shadows as lattice and missed part of the lattice): hollows are now compact dark blobs (size and elongation limits), the lattice zone is the density of compact hollows (ORTHO_ZONE_REL 0.65), zone patches that are small or bright (bluff) are dropped, ridges only inside the zone.
 - On that screenshot the zone follows the central lattice and no longer touches the bluff; it is conservative and still misses the weaker lattice at the far left. `tools/tune_masks.py` makes a 3x3 grid (ORTHO_K x ORTHO_ZONE_REL) for choosing settings on the real window.
 - Still NOT run on the real arrays; tuned on a downsampled screenshot of the orthoimage panel only.
+
+## v5, Nov 14, 2026 (written during the hackathon)
+- `marswalk/layers.py` (new): hillshade, slope and ortho-mask PNGs (data URIs) plus a downsampled height grid and orthoimage texture, written into `routes.json` as `layers` and `terrain`.
+- `params.py`: `DWELL_MIN_PER_STOP` (15 min), `CAMERA_HEIGHT_M` (1.6 m) and `ROVER_RETURNS_TO_HAB` are ASSUMPTIONS. Radiation time now includes dwell; `summary.json` gets `total_time_min`.
+- Rover now goes to every stop it can reach, else to the nearest reachable ground (`rover_target_rc`, `rover_gap_m` in routes.json), then returns to the habitat.
+- Tested on SYNTHETIC terrain, then on the real window (looked right in the tablet page; summary numbers in the README).

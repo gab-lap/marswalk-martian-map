@@ -46,3 +46,7 @@ ORTHO_MIN_RIDGE_CELLS = 15        # drop ridge specks smaller than this
 HAB_DIST_FROM_LATTICE_M = 200.0   # RULE: habitat placed about this far from the lattice centre, on smooth ground
 STOP_MARGIN_M = 20.0              # RULE: margin stop within this distance of the lattice edge
 # Labels: ridge/hollow masks are an IMAGE-BRIGHTNESS PROXY (not elevation); brightness also reflects shadow and illumination.
+
+DWELL_MIN_PER_STOP = 15.0        # ASSUMPTION: time spent working at each science stop (the walk alone is only ~10 min)
+CAMERA_HEIGHT_M = 1.6            # ASSUMPTION: rover camera mast height for the simulated view
+ROVER_RETURNS_TO_HAB = True       # ASSUMPTION: the rover drives back to the habitat after the last stop
