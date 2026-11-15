@@ -1,11 +1,13 @@
 # Marswalk: a crew-and-rover route planner and tablet for Mount Sharp
 
-NASA Space Apps Challenge 2026 · challenge: **Interplanetary Survival Guide: Martian Map** · team: Employees of The Month
+NASA Space Apps Challenge 2026 · challenge: **Interplanetary Survival Guide: Martian Map** · team: Employees of the Month
 
 **In one paragraph.** Two agents leave a habitat on Mars: an astronaut on foot and a rover carrying gear. They cannot go the same places, so each gets its own terrain-cost map built from real HiRISE data. The planner finds a route for each, picks three science stops, checks that everyone stays inside an abort radius, and estimates the radiation dose of the excursion. A tablet page shows all of it: map layers, a 3D terrain view, a route profile, a radiation panel with a solar-storm what-if, and a simulated rover-camera view.
 
+**Jump to:** [Results](#results-on-the-real-window) · [How it works](#how-it-works) · [What the tablet shows](#what-the-tablet-shows) · [Assumptions](#assumptions-you-should-know-about) · [Known limitations](#known-limitations) · [Run it yourself](#run-it-yourself) · [Use of AI](#use-of-ai)
+
 You do not need to install anything to see it:
-- Tablet page (clickable, runs in the browser): `docs/index.html` (or GitHub Pages link)
+- Tablet page (clickable, runs in the browser): `docs/index.html` (or the GitHub Pages link)
 - Map pack: `docs/map_pack/` (`1_layers.png`, `2_costs.png`, `3_routes.png`, `4_ortho_masks.png`)
 
 ## The idea
@@ -46,10 +48,10 @@ The site is the boxwork area on Mount Sharp, Gale Crater, a honeycomb pattern of
 |---|---|---|
 | Astronaut route | 565 m, max slope 17.6°, farthest point 232 m from the habitat | derived |
 | Walking time | 9.4 min at 1.0 m/s | speed assumed |
-| Time at stops | 3 × 15 min | assumed |
-| Excursion dose | 7.9 µGy for 54 min | rate sourced, time assumed |
+| Time at stops | 3 × 15 min (54.4 min total) | assumed |
+| Excursion dose | 7.9 µGy for 54 min, verdict GO | rate sourced, time assumed |
 | Excursion limit | 50 µGy | assumed (no official EVA limit used) |
-| Rover route | see `out/summary.json` after a run (rover goes to Stop 1, then to the nearest reachable ground for Stops 2 and 3, and returns to habitat) | derived, speed assumed |
+| Rover route | 605 m, max slope 14.2°, 20.2 min at 0.5 m/s, farthest point 225 m from the habitat; goes to Stop 1, then to the nearest reachable ground for Stops 2 and 3, and returns to the habitat | derived, speed assumed |
 | Rover battery | 99.8% at the rendezvous | simulated |
 
 Habitat at (row 32, col 110); stops at (62, 157), (112, 239), (229, 228) in the window.
@@ -78,8 +80,14 @@ All of them live in `marswalk/params.py`.
 
 ## Run it yourself
 
+Tested on Ubuntu 24.04 with Python 3. A virtual environment is needed there, because a plain `pip install` is blocked on that system.
+
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
 pip install numpy scipy matplotlib rasterio
+
 python3 run_demo.py out                                   # synthetic test terrain, not Mars
 python3 run_demo.py out \
   --dtm DTEEC_001488_1750_001752_1750_U02.IMG \
@@ -96,6 +104,7 @@ marswalk/      planner: terrain, costs, stops, planner, report, layers, viz, exp
 nav2_test/     loads rover_cost.* in Nav2's planner server (ROS 2 Jazzy)
 tablet/        the page template (single HTML file)
 tools/         window checks, mask tuning, build_tablet.py
+docs/          built tablet page (GitHub Pages) and the map pack
 run_demo.py    the whole pipeline
 CHANGELOG.md   version history and notes
 ```
