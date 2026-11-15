@@ -74,3 +74,63 @@ def synthetic_boxwork(n=500, cell_m=1.0, seed=0, spacing_m=20.0, ridge_w_m=5.0):
         rocks[r:r + 2, c:c + 2] = True
     sand = ~ridge & ~rocks
     return dem, ridge, sand, rocks
+
+
+def load_ortho(ortho_path, dtm_path, window_rect):
+    """Orthoimage over the SAME ground area as the DTM window, resampled to the DTM grid (cell for cell). nan = no data."""
+    import rasterio
+    from rasterio.windows import Window, from_bounds
+    col, row, w, h = window_rect
+    with rasterio.open(dtm_path) as d:
+        bounds = d.window_bounds(Window(col, row, w, h))
+    with rasterio.open(ortho_path) as o:
+        img = o.read(1, window=from_bounds(*bounds, transform=o.transform), boundless=True,
+                     fill_value=0, out_shape=(h, w)).astype("float64")
+    img[img <= 0] = np.nan
+    return img
+
+
+def ortho_masks(img, p):
+    """Boxwork proxies from orthoimage brightness: (ridge, hollow, zone).
+    hollow = dark, COMPACT blobs (size and elongation limited); ridge = light-toned fragments inside the lattice zone;
+    zone = where compact hollows are dense (the lattice), away from bright bluff areas.
+    p is the params module. These are PROXIES: brightness reflects material, shadow and illumination, not elevation.
+    Tuned on a screenshot of the real 3300/10450 window only; re-check 4_ortho_masks.png on the real data."""
+    from scipy.ndimage import gaussian_filter, label, find_objects, binary_fill_holes
+    valid = np.isfinite(img)
+    x = np.where(valid, img, np.nanmedian(img) if valid.any() else 0.0)
+    lo, hi = np.percentile(x, [2, 98]); x = np.clip((x - lo) / max(hi - lo, 1e-9), 0, 1)
+    c = gaussian_filter(x, p.ORTHO_SMOOTH_CELLS) - gaussian_filter(x, p.ORTHO_LOCAL_CELLS)
+    sig = np.sqrt(gaussian_filter(c ** 2, p.ORTHO_LOCAL_CELLS)) + 1e-9
+    dark = (c < -p.ORTHO_K * sig) & (c < -p.ORTHO_MIN_CONTRAST)
+    light = (c > p.ORTHO_K * sig) & (c > p.ORTHO_MIN_CONTRAST)
+    lab, n = label(dark, structure=np.ones((3, 3))); area = np.bincount(lab.ravel(), minlength=n + 1)
+    keep = np.zeros(n + 1, bool)
+    for i, sx in enumerate(find_objects(lab), 1):
+        h, w = sx[0].stop - sx[0].start, sx[1].stop - sx[1].start
+        keep[i] = (p.ORTHO_HOLLOW_MIN_CELLS <= area[i] <= p.ORTHO_HOLLOW_MAX_CELLS
+                   and max(h, w) / max(1, min(h, w)) <= p.ORTHO_HOLLOW_MAX_ASPECT)
+    compact = keep[lab]
+    dens = gaussian_filter(compact.astype("float64"), p.ORTHO_ZONE_CELLS)
+    zone = binary_fill_holes(dens > p.ORTHO_ZONE_REL * np.percentile(dens, 97)) & valid
+    lz, nz = label(zone)
+    if nz:
+        size = np.bincount(lz.ravel(), minlength=nz + 1)
+        bright = np.bincount(lz.ravel(), weights=x.ravel(), minlength=nz + 1) / np.maximum(size, 1)
+        ok = (size >= p.ORTHO_ZONE_MIN_FRACTION * zone.size) & (bright <= p.ORTHO_ZONE_MAX_BRIGHTNESS); ok[0] = False
+        zone = ok[lz]
+    lr, nr = label(light & zone, structure=np.ones((3, 3)))
+    kr = np.bincount(lr.ravel(), minlength=nr + 1) >= p.ORTHO_MIN_RIDGE_CELLS; kr[0] = False
+    return kr[lr], compact & zone, zone
+
+
+def synthetic_ortho(shape, seed=3):
+    """TEST ONLY: fake orthoimage with a lattice patch (light ridges, dark hollows) in a rectangle, to exercise the mask and stop logic."""
+    rng = np.random.default_rng(seed); h, w = shape
+    r, c = np.indices(shape)
+    img = 0.5 + 0.15 * np.sin(c / 90.0) + 0.05 * rng.normal(size=shape)
+    zone = (r > 0.30 * h) & (r < 0.85 * h) & (c > 0.45 * w) & (c < 0.80 * w)
+    u, v = (r + 0.3 * c) % 18, (c - 0.2 * r) % 18
+    lattice = ((u < 3) | (v < 3)).astype(float)
+    img = np.where(zone, 0.25 + 0.55 * lattice + 0.05 * rng.normal(size=shape), img)
+    return np.clip(img, 0.01, 1.0)

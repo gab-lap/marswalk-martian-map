@@ -29,3 +29,20 @@ EVA_RAD_LIMIT_MICROGY = 50.0     # ASSUMPTION: Max allowed dose per surface excu
 
 ROVER_SPEED_M_S = 0.5            # ASSUMPTION: rover cruise speed
 BATTERY_DRAIN_PCT_PER_KM = 4.0   # SIMULATED: invented for the tablet mockup, not a sourced figure
+
+# --- Orthoimage-derived boxwork masks (ALL ASSUMPTIONS, tune on the real window; overlay in 4_ortho_masks.png) ---
+ORTHO_SMOOTH_CELLS = 1.0          # light denoise before contrast
+ORTHO_LOCAL_CELLS = 10            # scale of the local mean (hollows are ~10-30 cells wide)
+ORTHO_K = 0.5                     # dark/light = differs from the local mean by K local-sigmas ...
+ORTHO_MIN_CONTRAST = 0.08         # ... and by at least this much (brightness scaled 0-1 by the 2-98 percentile)
+ORTHO_HOLLOW_MIN_CELLS = 15       # hollow = compact dark blob: size limits (cells) ...
+ORTHO_HOLLOW_MAX_CELLS = 700
+ORTHO_HOLLOW_MAX_ASPECT = 3.5     # ... and elongation limit (bluff shadows are long streaks)
+ORTHO_ZONE_CELLS = 20             # smoothing scale of the hollow-density map
+ORTHO_ZONE_REL = 0.65             # lattice zone = density above this fraction of the 97th percentile (0.5 spills, 0.8 too tight on the test window)
+ORTHO_ZONE_MIN_FRACTION = 0.06    # drop lattice-zone patches smaller than this fraction of the window
+ORTHO_ZONE_MAX_BRIGHTNESS = 0.6   # drop zone patches brighter than this on average (bright bluff, 0-1 scale)
+ORTHO_MIN_RIDGE_CELLS = 15        # drop ridge specks smaller than this
+HAB_DIST_FROM_LATTICE_M = 200.0   # RULE: habitat placed about this far from the lattice centre, on smooth ground
+STOP_MARGIN_M = 20.0              # RULE: margin stop within this distance of the lattice edge
+# Labels: ridge/hollow masks are an IMAGE-BRIGHTNESS PROXY (not elevation); brightness also reflects shadow and illumination.

@@ -8,6 +8,8 @@ venv/
 out/
 *.IMG
 *.img
+*.JP2
+*.jp2
 *.aux.xml
 
 # Editor & OS
