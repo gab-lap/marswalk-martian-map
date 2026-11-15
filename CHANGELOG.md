@@ -29,3 +29,5 @@ Synthetic terrain, per-agent costs, A* with no corner-cutting, Nav2 map export, 
 - `params.py`: `DWELL_MIN_PER_STOP` (15 min), `CAMERA_HEIGHT_M` (1.6 m) and `ROVER_RETURNS_TO_HAB` are ASSUMPTIONS. Radiation time now includes dwell; `summary.json` gets `total_time_min`.
 - Rover now goes to every stop it can reach, else to the nearest reachable ground (`rover_target_rc`, `rover_gap_m` in routes.json), then returns to the habitat.
 - Tested on SYNTHETIC terrain, then on the real window (looked right in the tablet page; summary numbers in the README).
+- Tablet page (`tablet/template.html`, built by `tools/build_tablet.py`): map layers, 3D view (three.js), rover camera render, dwell-aware dose, side panel with Mission / Safety / Rover tabs (each fits on screen without scrolling).
+- README, LICENSE and .gitignore added; the README documents the timeline and AI use.

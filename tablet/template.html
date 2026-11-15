@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marswalk tablet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--bg:#0c0e12;--card:#161a21;--line:#262c36;--tx:#e8eaed;--mu:#8b94a3;--ac:#ff8a4c;--go:#4cc38a;--wn:#f2b84b;--no:#ef5b5b;--rv:#5ab8e8}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;min-height:44px;padding:0 14px;cursor:pointer}
+button[aria-pressed=true],button.on{border-color:var(--ac);color:var(--ac)}button:disabled{opacity:.35;cursor:default}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;gap:8px;padding:8px}
+.bar{display:flex;gap:12px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.pill{padding:6px 14px;border-radius:99px;font-weight:700;letter-spacing:.05em}
+.go{background:#123524;color:var(--go)}.no{background:#3d1717;color:var(--no)}
+.sp{flex:1}.mu{color:var(--mu)}.num{font-variant-numeric:tabular-nums}
+.main{min-height:0;display:grid;grid-template-columns:1fr 340px;gap:8px}
+.left{min-height:0;display:grid;grid-template-rows:1fr 168px;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;min-height:0}
+.mapw{position:relative;overflow:hidden;padding:0}
+#map{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.tools{position:absolute;left:8px;top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:44px;padding:0}
+.legend{position:absolute;left:8px;bottom:8px;font-size:12px;color:var(--mu);background:#0c0e12cc;padding:4px 8px;border-radius:6px}
+.side{min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px}.side>*{flex:none}.card{padding:12px 14px}.hint{font-size:12px;color:var(--mu);background:#0c0e12cc;padding:6px 10px;border-radius:6px;align-self:center}#src{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.tools{align-items:center}.views{position:absolute;right:64px;top:8px;display:flex;gap:6px;z-index:2}#v3{position:absolute;inset:0;display:none;background:#0c0e12}#v3 canvas{width:100%;height:100%;display:block;cursor:grab}.cam.txt{height:auto;border:0;background:none;display:block;padding:6px 0 0;text-align:left}#camc{display:none;width:100%;border-radius:8px;border:1px solid var(--line)}h2 .lg{float:right;text-transform:none;letter-spacing:0;font-weight:400}
+h2{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);font-weight:600}
+.big{font-size:26px;font-weight:700}
+.row{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.stop{display:block;width:100%;text-align:left;margin-bottom:6px;padding:8px 10px;min-height:56px}
+.stop small{display:block;color:var(--mu);margin-top:2px}
+.bar2{height:8px;background:#222831;border-radius:4px;overflow:hidden;margin:6px 0}.bar2 i{display:block;height:100%}
+input[type=range]{width:100%;accent-color:var(--ac);height:32px}
+.tag{font-size:10px;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--mu);margin-left:6px;vertical-align:middle}
+.cam{height:110px;border-radius:8px;border:1px dashed var(--line);display:grid;place-items:center;text-align:center;color:var(--mu);font-size:12px;background:repeating-linear-gradient(45deg,#13161c,#13161c 10px,#171b22 10px,#171b22 20px)}
+.banner{display:none}.banner.show{display:block;background:#3d1717;border:1px solid var(--no);color:var(--no);border-radius:10px;padding:8px 12px;font-weight:600}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.tab{display:flex;flex-direction:column;gap:8px}.tab[hidden]{display:none}.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tile{background:#10141a;border-radius:8px;padding:8px 10px}.tile small{display:block;color:var(--mu);font-size:11px}.tile b{font-size:18px}.sub{font-size:11px;letter-spacing:.06em;color:var(--mu);margin:8px 0 4px}
+.side{gap:6px}.side .card{padding:10px 12px}.side h2{margin:0 0 6px}.big{font-size:22px}.stop{min-height:46px;padding:6px 10px;margin-bottom:5px}.stop:last-child{margin-bottom:0}.mt{display:grid;grid-template-columns:auto 1fr 1fr;gap:5px 14px;font-size:13px;align-items:baseline}.mt b{text-align:right}.mt .h{color:var(--mu);font-size:10px;letter-spacing:.08em;text-align:right}.cam{height:72px}.tabs button{min-height:40px}.stop small{font-size:12px}
+@media(max-width:900px){html,body{overflow:auto}.main{grid-template-columns:1fr}.left{grid-template-rows:60vh 150px}}
+</style></head><body><div class="app">
+<div class="bar"><b>MARSWALK</b><span id="src" class="mu"></span><span class="sp"></span>
+<span class="mu">Dose so far</span><b id="hd" class="num"></b><span id="vd" class="pill"></span>
+<button id="load" title="Load a routes.json exported by run_demo.py">Load routes.json</button><input id="file" type="file" accept=".json" hidden></div>
+<div class="main"><div class="left">
+<div class="card mapw"><svg id="map"></svg><div id="v3"></div><div class="views"><button id="b2" aria-pressed="true">Map</button><button id="b3" aria-pressed="false">3D</button><button id="bx" style="display:none">Relief ×2</button></div>
+<div class="tools" id="tools"></div>
+<div class="zoom"><button id="zi">+</button><button id="zr">⌂</button><button id="zo">−</button></div>
+<div class="legend" id="lgd"></div></div>
+<div class="card"><h2>Route profile <span class="lg mu" id="pinfo"></span></h2><svg id="prof" style="width:100%;height:104px;display:block"></svg></div>
+</div>
+<div class="side">
+<div class="banner" id="banner"></div>
+<div class="tabs"><button data-t="mission" aria-pressed="true">Mission</button><button data-t="safety" aria-pressed="false">Safety</button><button data-t="rover" aria-pressed="false">Rover</button></div>
+<div class="tab" id="tab-mission">
+<div class="card"><h2>Next stop</h2><div class="big" id="nx"></div><div class="mu" id="nxs"></div>
+<input type="range" id="pos" min="0" max="100" step="0.5" value="0" aria-label="Position along the route">
+<div class="row"><span class="mu">Position</span><span class="num" id="pt"></span></div></div>
+<div class="card"><h2>Route metrics</h2><div class="mt">
+<span></span><span class="h">ASTRONAUT</span><span class="h">ROVER</span>
+<span class="mu">Distance</span><b id="m-al"></b><b id="m-rl"></b>
+<span class="mu">Time</span><b id="m-at"></b><b id="m-rt"></b>
+<span class="mu">Max slope</span><b id="m-as"></b><b id="m-rs"></b>
+<span class="mu">Farthest from habitat</span><b id="m-af"></b><b id="m-rf"></b></div>
+<div class="mu" style="font-size:11px;margin-top:6px" id="mt-note"></div></div>
+<div class="card"><h2>Science stops</h2><div id="stops"></div></div></div>
+<div class="tab" id="tab-safety" hidden>
+<div class="card"><h2>Radiation <span class="tag" id="rl1"></span></h2>
+<div class="row"><span>Route dose</span><b class="num" id="dose"></b></div>
+<div class="bar2"><i id="db"></i></div>
+<div class="row mu"><span>Limit</span><span id="lim"></span></div>
+<div class="row"><span>Time left to the limit</span><b class="num" id="ttl"></b></div>
+<div class="mu" style="font-size:11px">from the current position at the current flux, if staying out</div>
+<div class="row" style="margin-top:8px"><span>Solar particle event</span><b class="num" id="mv"></b></div>
+<input type="range" id="mult" min="1" max="60" value="1" aria-label="Flux multiplier">
+<div class="mu" style="font-size:11px" id="mnote"></div></div>
+<div class="card"><h2>Abort radius <span class="tag">assumed</span></h2>
+<div class="row"><span>Abort radius</span><span class="num" id="ab-r"></span></div>
+<div class="row"><span>Astronaut, farthest point</span><span class="num" id="ab-f"></span></div>
+<div class="row"><span>Rover, farthest point</span><span class="num" id="ab-rf"></span></div>
+<div class="row"><b>Margin (astronaut)</b><b class="num" id="ab-m"></b></div></div></div>
+<div class="tab" id="tab-rover" hidden>
+<div class="card"><h2>Rover <span class="tag">battery simulated</span></h2>
+<div class="row"><span>Battery at route end</span><b class="num" id="bat"></b></div>
+<div class="row"><span>Route</span><span class="num" id="rdv"></span></div>
+<div class="row"><span>Cruise speed</span><span class="num"><span id="rv-sp"></span> <span class="tag">assumed</span></span></div>
+<div class="mu" style="font-size:11px;margin-top:4px" id="rrole"></div></div>
+<div class="card"><h2>Rover camera <span class="tag">simulated</span></h2><button id="camb" aria-pressed="false" style="width:100%;min-height:40px;margin-bottom:6px">Show view</button>
+<canvas id="camc" width="600" height="330"></canvas><div class="cam" id="cam">Camera off</div></div></div>
+</div></div></div>
+<script>
+const SAMPLE=__DATA__;
+const $=i=>document.getElementById(i),NS="http://www.w3.org/2000/svg";
+let PW=1000,D,S={pos:0,sel:null,mult:1,cam:false,vb:null,layer:null};
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
+const f=(v,n=1)=>(+v).toFixed(n);
+
+function adapt(r){
+ const c=r.meta.cell_m,H=r.meta.grid_rows_cols[0],W=r.meta.grid_rows_cols[1];
+ const rc=p=>({x:p[1]*c,y:(H-1-p[0])*c});
+ const A=r.astronaut.points,R=r.rover.points,sp=r.astronaut.summary;
+ const d={src:r.meta.terrain_source,W:W*c,H:H*c,hab:rc(r.habitat_rc),abort:r.abort_radius_m.value,
+  A:A.map(p=>({x:p.x_m,y:p.y_m,z:p.elev_m,s:p.pitch_deg,d:p.dist_m,t:p.t_min})),
+  R:R.map(p=>({x:p.x_m,y:p.y_m,b:p.battery_pct,z:p.elev_m,h:p.heading_deg,p:p.pitch_deg,l:p.roll_deg,d:p.dist_m,t:p.t_min})),
+  rate:r.radiation.base_rate_uGy_per_h.value,lim:r.radiation.excursion_limit_uGy.value,
+  rateL:r.radiation.base_rate_uGy_per_h.label,limL:r.radiation.excursion_limit_uGy.label,
+  speed:sp.length_m/(sp.time_min*60),maxd:sp.max_dist_from_hab_m,len:sp.length_m,
+  layers:r.layers||[],terrain:r.terrain||null,dwell:(r.dwell_min_per_stop||{}).value||0,camh:(r.camera_height_m||{}).value||1.6,walk:sp.time_min,cell:c,win:r.meta.window,rs:r.rover.summary,maxs:sp.max_slope_deg,rspeed:(r.rover.speed_m_s||{}).value};
+ d.time=sp.time_min+d.dwell*r.stops.length;
+ d.stops=r.stops.map(s=>{const q=rc(s.rc);let bi=0,bd=1e9;d.A.forEach((p,i)=>{const e=Math.hypot(p.x-q.x,p.y-q.y);if(e<bd){bd=e;bi=i}});
+  return{...q,rcs:s.rc,type:s.type,obj:s.objective,rule:s.rule,rover:s.rover_visits,at:d.A[bi].d,rt:s.rover_target_rc?rc(s.rover_target_rc):null,gap:s.rover_gap_m||0}});
+ return d}
+
+function at(arr,dist){let i=0;while(i<arr.length-1&&arr[i+1].d<=dist)i++;const a=arr[i],b=arr[Math.min(i+1,arr.length-1)];
+ const k=b.d>a.d?(dist-a.d)/(b.d-a.d):0;return{x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,z:(a.z??0)+((b.z??0)-(a.z??0))*k,t:a.t+(b.t-a.t)*k}}
+const T=d=>at(D.A,d).t+D.dwell*D.stops.filter(s=>s.at<d-.01).length;
+const dose=(t,m)=>t/60*D.rate*m;
+
+function build(){
+ const m=$("map");m.innerHTML="";S.vb=fit();
+ const ne=(n,a,p)=>{a["vector-effect"]="non-scaling-stroke";return el(n,a,p)};
+ el("rect",{x:0,y:0,width:D.W,height:D.H,fill:"#10141a"},m);
+ const lg=el("g",{},m);
+ for(let x=0;x<=D.W;x+=50){ne("line",{x1:x,y1:0,x2:x,y2:D.H,stroke:"#1b2028","stroke-width":1},m);ne("line",{y1:x,x1:0,y2:x,x2:D.W,stroke:"#1b2028","stroke-width":1},m)}
+ ne("rect",{x:0,y:0,width:D.W,height:D.H,fill:"none",stroke:"#2d3541","stroke-width":1.5},m);
+ el("clipPath",{id:"cp"},m).appendChild(el("rect",{x:0,y:0,width:D.W,height:D.H}));
+ const g=el("g",{"clip-path":"url(#cp)"},m);
+ ne("circle",{cx:D.hab.x,cy:D.H-D.hab.y,r:D.abort,fill:"none",stroke:"#ef5b5b","stroke-width":2,"stroke-dasharray":"8 6"},g);
+ const L=(a,c,d,w)=>ne("polyline",{points:a.map(p=>p.x+","+(D.H-p.y)).join(" "),fill:"none",stroke:c,"stroke-width":w,"stroke-dasharray":d,"stroke-linejoin":"round","stroke-linecap":"round"},g);
+ L(D.A,"#ff8a4c","",3);L(D.R,"#5ab8e8","8 6",3.5);D.stops.forEach(s=>{if(s.gap>.5&&s.rt)L([s.rt,s],"#5ab8e8","2 5",2)});
+ const mk=(x,y,id)=>{const o=el("g",{class:"mk"},g);if(id)o.id=id;o.dataset.x=x;o.dataset.y=D.H-y;return o};
+ const hb=mk(D.hab.x,D.hab.y);el("rect",{x:-8,y:-8,width:16,height:16,fill:"#e8eaed"},hb);
+ const ht=el("text",{x:14,y:4,fill:"#e8eaed","font-size":12,"font-weight":600},hb);ht.textContent="HABITAT";
+ const rp=D.R[D.R.length-1],rm=rmark(),rv=mk(rm.x,rm.y,"rv");el("rect",{x:-11,y:-11,width:22,height:22,rx:3,fill:"#5ab8e8",stroke:"#0c0e12","stroke-width":2},rv);
+ D.stops.forEach((s,i)=>{const o=mk(s.x,s.y);o.style.cursor="pointer";o.onclick=()=>sel(i);
+  el("circle",{r:22,fill:"transparent"},o);el("circle",{r:11,fill:"#0c0e12",stroke:"#4cc38a","stroke-width":3,id:"sc"+i},o);
+  const n=el("text",{y:4,"text-anchor":"middle","font-size":12,fill:"#e8eaed","font-weight":700},o);n.textContent=i+1});
+ const me=mk(0,0,"me");el("circle",{r:8,fill:"#ff8a4c",stroke:"#fff","stroke-width":2.5},me);
+ const tl=$("tools");tl.innerHTML="";
+ [{n:"Routes"},...D.layers].forEach((l,i)=>{const b=document.createElement("button");b.textContent=l.n||l.name;b.setAttribute("aria-pressed",i==0);
+  b.onclick=()=>{[...tl.children].forEach(c=>c.setAttribute("aria-pressed",c===b));lg.innerHTML="";if(l.src)el("image",{href:l.src,x:0,y:0,width:D.W,height:D.H},lg)};tl.appendChild(b)});
+ if(!D.layers.length){const h=document.createElement("span");h.className="hint";h.textContent="Terrain layers need PNG exports";tl.appendChild(h)}
+ fillStatic();$("lim").textContent=D.lim+" µGy";$("rl1").textContent=D.limL.split(":")[0];
+ $("pos").max=D.len;$("pos").value=0;S.pos=0;S.sel=null;
+ const rb=rp.b;$("bat").textContent=rb==null?"n/a":f(rb)+"%";$("rdv").textContent=f(rp.d,0)+" m, "+f(rp.t,1)+" min";
+ T3=null;$("v3").innerHTML="";{const o=$("camc"),n=o.cloneNode();o.replaceWith(n)}setView(false);$("b3").disabled=!D.terrain||typeof THREE==="undefined";vb();profile();upd();camUI()}
+
+let T3=null;
+function init3(){
+ if(T3||!D.terrain||typeof THREE==="undefined")return T3;
+ const t=D.terrain,st=t.step_m,zm=Math.min(...t.z),sc=new THREE.Scene(),Gt=new THREE.Group();sc.add(Gt);
+ const rd=new THREE.WebGLRenderer({antialias:true});$("v3").appendChild(rd.domElement);
+ const rc=new THREE.WebGLRenderer({canvas:$("camc"),antialias:true});rc.setSize(600,330,false);
+ const pos=[],uv=[],ix=[];
+ for(let r=0;r<t.rows;r++)for(let c=0;c<t.cols;c++){pos.push(c*st,t.z[r*t.cols+c]-zm,r*st);uv.push(c/(t.cols-1),1-r/(t.rows-1))}
+ for(let r=0;r<t.rows-1;r++)for(let c=0;c<t.cols-1;c++){const a=r*t.cols+c,b=a+1,d=a+t.cols;ix.push(a,d,b,b,d,d+1)}
+ const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(ix);g.computeVertexNormals();
+ const tex=new THREE.TextureLoader().load(t.tex,()=>{r3();cam3()});
+ Gt.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:tex})));
+ sc.add(new THREE.AmbientLight(0xffffff,.8));const dl=new THREE.DirectionalLight(0xffffff,.5);dl.position.set(-1,1,-.6);sc.add(dl);
+ const tube=(a,col,rad,lift=0)=>Gt.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(a.map(p=>new THREE.Vector3(p.x,p.z-zm+rad+.4+lift,D.H-p.y))),Math.min(500,a.length*3),rad,5),new THREE.MeshBasicMaterial({color:col})));
+ tube(D.A,0xff8a4c,1.6);tube(D.R,0x5ab8e8,1.4,2.6);
+ const M=[],mk=(col,h,rad,x,z,Z)=>{const o=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:col}),p=new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,h,6),m),b=new THREE.Mesh(new THREE.SphereGeometry(rad,12,8),m);p.position.y=h/2;b.position.y=h;o.add(p,b);sc.add(o);const k={o,x,z,Z};M.push(k);return k};
+ const rm=rmark();
+ mk(0xe8eaed,22,4,D.hab.x,D.A[0].z,D.H-D.hab.y);mk(0x5ab8e8,10,3.5,rm.x,rm.z,D.H-rm.y);
+ D.stops.forEach(s=>{const q=at(D.A,s.at);mk(0x4cc38a,28,4,q.x,q.z,D.H-q.y)});
+ const me=mk(0xff8a4c,14,4.5,D.A[0].x,D.A[0].z,D.H-D.A[0].y);
+ const cx=D.A.reduce((s,p)=>s+p.x,0)/D.A.length,cz=D.A.reduce((s,p)=>s+D.H-p.y,0)/D.A.length,cy=D.A.reduce((s,p)=>s+p.z,0)/D.A.length-zm;
+ const ext=Math.max(...D.A.map(p=>Math.hypot(p.x-cx,D.H-p.y-cz)));
+ const o0={yaw:-.5,pit:.9,dist:ext*2.6+80},o={...o0},ca=new THREE.PerspectiveCamera(45,1.6,1,6000),c2=new THREE.PerspectiveCamera(60,600/330,.3,6000);
+ T3={sc,rd,rc,Gt,M,me,o,o0,ca,c2,zm,ex:2,cx,cy,cz,dispose(){}};
+ const place=()=>{Gt.scale.y=T3.ex;M.forEach(k=>k.o.position.set(k.x,(k.z-zm)*T3.ex,k.Z))};place3=place;place();
+ const el=rd.domElement;let dr=null;
+ el.onpointerdown=e=>{dr=e;el.setPointerCapture(e.pointerId)};
+ el.onpointermove=e=>{if(!dr)return;o.yaw-=(e.clientX-dr.clientX)*.006;o.pit=Math.max(.12,Math.min(1.5,o.pit+(e.clientY-dr.clientY)*.006));dr=e;r3()};
+ el.onpointerup=()=>dr=null;el.onwheel=e=>{e.preventDefault();o.dist*=e.deltaY<0?.9:1.1;r3()};
+ return T3}
+let place3=()=>{};
+function r3(){
+ if(!T3||!S.v3)return;const{sc,rd,ca,o,cx,cy,cz}=T3,w=$("v3").clientWidth,h=$("v3").clientHeight;if(!w)return;
+ rd.setSize(w,h,false);rd.setPixelRatio(Math.min(2,devicePixelRatio));ca.aspect=w/h;ca.updateProjectionMatrix();
+ const y=cy*T3.ex;ca.position.set(cx+o.dist*Math.cos(o.pit)*Math.sin(o.yaw),y+o.dist*Math.sin(o.pit),cz+o.dist*Math.cos(o.pit)*Math.cos(o.yaw));ca.lookAt(cx,y,cz);
+ sc.fog=null;sc.background=new THREE.Color(0x0c0e12);rd.render(sc,ca)}
+function rmark(){const s=D.stops[0];if(!s||!s.rt)return D.R[D.R.length-1];let b=D.R[0],bd=1e9;D.R.forEach(p=>{const e=Math.hypot(p.x-s.rt.x,p.y-s.rt.y);if(e<bd){bd=e;b=p}});return b}
+function camPos(){const s=D.stops[Math.min(1,D.stops.length-1)];if(!s.rt)return{s,p:D.R[D.R.length-1]};let b=D.R[0],bd=1e9;D.R.forEach(p=>{const e=Math.hypot(p.x-s.rt.x,p.y-s.rt.y);if(e<bd){bd=e;b=p}});return{s,p:b}}
+function cam3(){
+ if(!T3||!S.cam)return;const{sc,rc,c2,zm,ex}=T3,{p:rp,s}=camPos(),q=at(D.A,s.at);
+ const y=(rp.z-zm)*ex+D.camh;c2.position.set(rp.x,y,D.H-rp.y);c2.lookAt(q.x,(q.z-zm)*ex+D.camh*.5,D.H-q.y);
+ const hid=[T3.Gt.children[1],T3.Gt.children[2],T3.M[0].o,T3.M[1].o,T3.me.o];hid.forEach(h=>h.visible=false);
+ sc.background=new THREE.Color(0xc58a63);sc.fog=new THREE.Fog(0xc58a63,150,1200);rc.render(sc,c2);sc.fog=null;hid.forEach(h=>h.visible=true)}
+function setView(v){S.v3=v;$("v3").style.display=v?"block":"none";$("b2").setAttribute("aria-pressed",!v);$("b3").setAttribute("aria-pressed",v);$("bx").style.display=v?"":"none";
+ if(v){init3();r3()}}
+function camUI(){
+ const ok=D.terrain&&typeof THREE!=="undefined",cm=$("camc"),ct=$("cam");$("camb").setAttribute("aria-pressed",S.cam);
+ if(S.cam&&ok){init3();cm.style.display="block";ct.className="cam txt";const{p:rp,s}=camPos();
+  ct.innerHTML="Simulated view from the DTM, not a camera image. At the rover"+(s.gap?" (waiting "+f(s.gap,0)+" m from the stop)":"")+", facing Stop "+(D.stops.indexOf(s)+1)+", eye "+D.camh+" m (assumed), relief ×"+T3.ex+". Terrain slope here: pitch "+f(rp.p)+"°, roll "+f(rp.l)+"°.";cam3()}
+ else{cm.style.display="none";ct.className="cam";ct.textContent=S.cam?"Needs a routes.json with terrain and the three.js library":"Camera off"}}
+
+function fillStatic(){
+ const S1=(id,v)=>$(id).textContent=v;
+ S1("src",D.src+(D.win?" · window "+D.win[0]+", "+D.win[1]+" ("+f(D.W,0)+"×"+f(D.H,0)+" m)":""));
+ $("lgd").innerHTML='<span style="color:var(--ac)">━</span> astronaut '+f(D.len,0)+' m &nbsp;<span style="color:var(--rv)">┅</span> rover '+f(D.rs.length_m,0)+' m &nbsp;<span style="color:var(--go)">●</span> science stop &nbsp;<span style="color:var(--no)">◌</span> abort ring '+D.abort+' m &nbsp;· grid 50 m · '+f(D.cell,1)+' m per cell';
+ S1("mt-note","Astronaut time includes "+D.dwell+" min per stop (assumed).");S1("m-al",f(D.len,0)+" m");S1("m-at",f(D.time,0)+" min");S1("m-as",f(D.maxs,1)+"°");S1("m-af",f(D.maxd,0)+" m");
+ S1("m-rl",f(D.rs.length_m,0)+" m");S1("m-rt",f(D.rs.time_min,1)+" min");S1("m-rs",f(D.rs.max_slope_deg,1)+"°");S1("m-rf",f(D.rs.max_dist_from_hab_m,0)+" m");
+ S1("ab-r",D.abort+" m");S1("ab-f",f(D.maxd,0)+" m");S1("ab-rf",f(D.rs.max_dist_from_hab_m,0)+" m");S1("ab-m",f(D.abort-D.maxd,0)+" m");S1("rv-sp",D.rspeed+" m/s");
+ const rp=D.R[D.R.length-1],ret=Math.hypot(rp.x-D.hab.x,rp.y-D.hab.y)<3;
+ S1("rrole","Goes to each stop it can reach; otherwise waits at the nearest reachable ground (the stop list shows the remaining gap)"+(ret?", then drives back to the habitat.":"."))}
+function tab(n){["mission","safety","rover"].forEach(k=>{$("tab-"+k).hidden=k!==n;document.querySelector("[data-t="+k+"]").setAttribute("aria-pressed",k===n)})}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>tab(b.dataset.t));
+function fit(){const a=[...D.A,...D.R,D.hab],x0=Math.min(...a.map(p=>p.x))-50,x1=Math.max(...a.map(p=>p.x))+50,yy=a.map(p=>D.H-p.y),y0=Math.min(...yy)-50,y1=Math.max(...yy)+50;
+ const ar=$("map").clientWidth/$("map").clientHeight||1.5;let w=x1-x0,h=y1-y0;if(w/h<ar)w=h*ar;else h=w/ar;let X=(x0+x1)/2-w/2,Y=(y0+y1)/2-h/2;if(w<=D.W)X=Math.min(Math.max(X,0),D.W-w);if(h<=D.H)Y=Math.min(Math.max(Y,0),D.H-h);return[X,Y,w,h]}
+function vb(){const v=S.vb,u=v[2]/($("map").clientWidth||800);$("map").setAttribute("viewBox",v.join(" "));document.querySelectorAll("#map .mk").forEach(o=>o.setAttribute("transform","translate("+o.dataset.x+" "+o.dataset.y+") scale("+u+")"))}
+function zoom(k){const[x,y,w,h]=S.vb,nw=Math.min(D.W*1.5,Math.max(D.W/12,w*k)),nh=nw*h/w;S.vb=[x+(w-nw)/2,y+(h-nh)/2,nw,nh];vb()}
+
+function profile(){
+ const p=$("prof");p.innerHTML="";const W=p.clientWidth||1000,Hh=104;PW=W;const zs=D.A.map(a=>a.z),lo=Math.min(...zs),hi=Math.max(...zs),sp=hi-lo||1;
+ p.setAttribute("viewBox","0 0 "+W+" "+Hh);const zs0=0,X=d=>d/D.len*W,Y=z=>8+(1-(z-lo)/sp)*70;
+ D.A.forEach((a,i)=>{if(!i)return;const b=D.A[i-1],s=Math.abs(a.s);
+  el("rect",{x:X(b.d),y:90,width:Math.max(1,X(a.d)-X(b.d)),height:14,fill:s<12?"#4cc38a":s<20?"#f2b84b":"#ef5b5b"},p)});
+ el("polyline",{points:D.A.map(a=>X(a.d)+","+Y(a.z)).join(" "),fill:"none",stroke:"#e8eaed","stroke-width":2},p);
+ D.stops.forEach((s,i)=>{el("line",{x1:X(s.at),x2:X(s.at),y1:0,y2:88,stroke:"#4cc38a","stroke-dasharray":"3 3"},p);const t=el("text",{x:X(s.at)+4,y:14,fill:"#4cc38a","font-size":13},p);t.textContent=i+1});
+ el("line",{id:"cur",y1:0,y2:Hh,stroke:"#ff8a4c","stroke-width":3},p);
+ $("pinfo").innerHTML=f(lo,0)+"–"+f(hi,0)+" m elev &nbsp; slope <span style=color:#4cc38a>■</span>&lt;12° <span style=color:#f2b84b>■</span>&lt;20° <span style=color:#ef5b5b>■</span>≥20°"}
+
+function sel(i){S.sel=S.sel===i?null:i;if(S.sel!=null)$("pos").value=S.pos=D.stops[i].at;upd()}
+
+function upd(){
+ const p=at(D.A,S.pos),r=S.pos/D.len;
+ $("me").dataset.x=p.x;$("me").dataset.y=D.H-p.y;vb();
+ $("cur").setAttribute("x1",r*PW);$("cur").setAttribute("x2",r*PW);
+ $("pt").textContent=f(S.pos,0)+" / "+f(D.len,0)+" m · "+f(T(S.pos),1)+" min";
+ const nx=D.stops.map((s,i)=>({s,i})).filter(o=>o.s.at>S.pos+.5)[0];
+ if(nx){const d=nx.s.at-S.pos;$("nx").textContent="Stop "+(nx.i+1)+" · "+f(d,0)+" m";$("nxs").textContent="ETA "+f(d/D.speed/60,1)+" min · "+nx.s.type}
+ else{$("nx").textContent="Route complete";$("nxs").textContent="Return to habitat"}
+ D.stops.forEach((s,i)=>$("sc"+i).setAttribute("stroke",S.sel===i?"#ff8a4c":"#4cc38a"));
+ $("stops").innerHTML="";D.stops.forEach((s,i)=>{const b=document.createElement("button");b.className="stop"+(S.sel===i?" on":"");
+  b.innerHTML="<b>"+(i+1)+" · "+s.type+"</b>"+(s.gap>.5?" <span class=tag>rover waits "+f(s.gap,0)+" m away</span>":s.rover?" <span class=tag>rover reaches</span>":" <span class=tag>foot only</span>")+"<small>"+(S.sel===i?s.obj+" — rule: "+s.rule+" · window row "+s.rcs[0]+", col "+s.rcs[1]+" · "+f(Math.hypot(s.x-D.hab.x,s.y-D.hab.y),0)+" m from the habitat":"at "+f(s.at,0)+" m · "+f(T(s.at),1)+" min")+"</small>";
+  b.onclick=()=>sel(i);$("stops").appendChild(b)});
+ const dd=dose(D.time,S.mult),ok=dd<=D.lim,part=dose(T(S.pos),S.mult);
+ $("dose").textContent=f(dd,2)+" µGy";$("hd").textContent=f(part,2)+" µGy · route "+f(dd,2);
+ $("vd").textContent=ok?"GO":"NO-GO";$("vd").className="pill "+(ok?"go":"no");
+ $("db").style.width=Math.min(100,dd/D.lim*100)+"%";$("db").style.background=ok?"var(--go)":"var(--no)";
+ $("mv").textContent=S.mult+"×";$("mnote").textContent=S.mult>1?"Hypothetical multiplier, not from RAD data. Route time "+f(D.time,0)+" min incl. "+D.dwell+" min per stop (assumed). Base "+D.rate+" µGy/h ("+D.rateL.split(":")[0]+"). Multiplier that exceeds the limit: "+f(D.lim/dose(D.time,1),0)+"×.":"Route time "+f(D.time,0)+" min incl. "+D.dwell+" min per stop (assumed). Base "+D.rate+" µGy/h ("+D.rateL.split(":")[0]+")";
+ const b=$("banner");b.className="banner"+(!ok?" show":"");b.textContent=!ok?"NO-GO: route dose exceeds the "+D.lim+" µGy excursion limit. Abort to habitat.":"";
+ const left=(D.lim-part)/(D.rate*S.mult)*60;$("ttl").textContent=left>0?f(left,0)+" min":"limit passed";document.querySelector("[data-t=safety]").style.color=ok?"":"var(--no)";
+ if(T3){T3.me.x=p.x;T3.me.z=p.z;T3.me.Z=D.H-p.y;place3();r3()}
+ $("camb").setAttribute("aria-pressed",S.cam)}
+
+$("pos").oninput=e=>{S.pos=+e.target.value;upd()};
+$("mult").oninput=e=>{S.mult=+e.target.value;upd()};
+$("camb").onclick=()=>{S.cam=!S.cam;camUI()};
+$("b2").onclick=()=>setView(false);$("b3").onclick=()=>setView(true);
+$("bx").onclick=()=>{if(!T3)return;T3.ex=T3.ex%3+1;$("bx").textContent="Relief ×"+T3.ex;place3();r3();cam3();if(S.cam)camUI()};
+$("zi").onclick=()=>S.v3&&T3?(T3.o.dist*=.85,r3()):zoom(.8);$("zo").onclick=()=>S.v3&&T3?(T3.o.dist*=1.18,r3()):zoom(1.25);$("zr").onclick=()=>S.v3&&T3?(Object.assign(T3.o,T3.o0),r3()):(S.vb=fit(),vb());
+$("load").onclick=()=>$("file").click();
+$("file").onchange=e=>{const r=new FileReader();r.onload=()=>{try{D=adapt(JSON.parse(r.result));build()}catch(x){alert("Could not read routes.json: "+x.message)}};r.readAsText(e.target.files[0])};
+let drag=null;const M=$("map");
+M.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,v:[...S.vb]}};
+M.onpointermove=e=>{if(!drag)return;const k=S.vb[2]/M.clientWidth;S.vb=[drag.v[0]-(e.clientX-drag.x)*k,drag.v[1]-(e.clientY-drag.y)*k,drag.v[2],drag.v[3]];vb()};
+M.onpointerup=M.onpointerleave=()=>drag=null;
+M.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?.9:1.1)};
+window.onresize=()=>{vb();profile();upd();r3()};D=adapt(SAMPLE);build();
+</script></body></html>
