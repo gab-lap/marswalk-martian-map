@@ -1,6 +1,6 @@
 # Marswalk: a crew-and-rover route planner and tablet for Mount Sharp
 
-NASA Space Apps Challenge 2026 · challenge: **Interplanetary Survival Guide: Martian Map** · team: Employees of the Month
+NASA Space Apps Challenge 2026 · challenge: **Interplanetary Survival Guide: Martian Map** · team: Employees of the Month · time: 2 days
 
 **In one paragraph.** Two agents leave a habitat on Mars: an astronaut on foot and a rover carrying gear. They cannot go the same places, so each gets its own terrain-cost map built from real HiRISE data. The planner finds a route for each, picks three science stops, checks that everyone stays inside an abort radius, and estimates the radiation dose of the excursion. A tablet page shows all of it: map layers, a 3D terrain view, a route profile, a radiation panel with a solar-storm what-if, and a simulated rover-camera view.
 
